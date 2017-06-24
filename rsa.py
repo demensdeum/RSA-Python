@@ -6,7 +6,6 @@
 # http://www.pagedon.com/rsa-explained-simply/my_programming/
 # http://southernpacificreview.com/2014/01/06/rsa-key-generation-example/
 
-
 import fractions
 import base64
 import sympy
