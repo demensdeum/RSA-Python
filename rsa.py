@@ -125,10 +125,10 @@ class TestCase():
         
         decryptedMessage = str(bytearray(decryptedBytes))
         decodedMessage = base64.b64decode(decryptedMessage)
-    
-        originalByteArray = []
         
         # Debug Print
+        
+        originalByteArray = []
         
         for byte in byteArray:
             originalByteArray.append(byte)
