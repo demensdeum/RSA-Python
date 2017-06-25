@@ -5,12 +5,24 @@
 # Based on:
 # http://www.pagedon.com/rsa-explained-simply/my_programming/
 # http://southernpacificreview.com/2014/01/06/rsa-key-generation-example/
+# https://0day.work/how-i-recovered-your-private-key-or-why-small-keys-are-bad/
 
 import fractions
 import base64
 import sympy
 
 class Math():
+    
+    @staticmethod    
+    def primeFactors(n):
+        
+        factors = []
+        
+        for i in range(2, n):
+            if n % i == 0:
+                factors.append(i)
+
+        return factors
 
     @staticmethod
     def xgcd(b, n):
@@ -61,9 +73,14 @@ class KeychainRSA():
 class KeyGenerator():
 
     @staticmethod
-    def getKeysRSA(p, q):
+    def generateKeysRSA(p, q):
+    
+        print("\nGenerating Key Pair...\n")
     
         n = p * q
+    
+        print("p, q: " + str(p) + ", " +  str(q))
+        print("n: " + str(n))
     
         t = (p - 1) * (q - 1)
     
@@ -93,13 +110,38 @@ class ProcessorRSA():
             
         return processedBytes
 
+class CrackerRSA():
+    
+    @staticmethod
+    def generateKeysFromKey(key):
+        
+        print("\n--- Factoring N ---\n")
+        
+        n = key.n
+        
+        primeFactors = Math.primeFactors(n)
+        
+        print("Got n from key: " + str(n))
+        
+        print("Prime factors: " + str(primeFactors))
+
+        print("Generating Key Pairs...")
+        
+        KeyGenerator.generateKeysRSA(primeFactors[0], primeFactors[1])
+        KeyGenerator.generateKeysRSA(primeFactors[1], primeFactors[0])
+        
+        print("\n--- Keys Generation Ends ---\n")
+        
+
 class TestCase():
     
     @staticmethod
     def testKeysRSA():
         
-        keychainA = KeyGenerator.getKeysRSA(11, 13)
-        keychainB = KeyGenerator.getKeysRSA(29, 31)
+        print("--- Sanity Checks ---")
+        
+        keychainA = KeyGenerator.generateKeysRSA(11, 13)
+        keychainB = KeyGenerator.generateKeysRSA(29, 31)
         
         result = True
         
@@ -116,11 +158,13 @@ class TestCase():
             print("RSA Generation Algorithm Is Broken...")
         
             exit(1)
+            
+        print("\n--- Looks Good! ---")
     
     @staticmethod
-    def testTextProcessing(message, p, q):
+    def testTextProcessing(message, keychain):
     
-        keychain = KeyGenerator.getKeysRSA(p, q)
+        print("\nEncrypt Raw Message: " + message +"\n")
     
         rawMessage = bytearray(message, 'utf-8')
         encodedMessage = base64.b64encode(rawMessage, None)
@@ -138,22 +182,31 @@ class TestCase():
         
         for byte in byteArray:
             originalByteArray.append(byte)
-    
-        print("p:" + str(p))
-        print("q:" + str(q)) 
         
-        print(originalByteArray)
-        print(encryptedBytes) 
-        print(decryptedBytes)
+        print("        Raw: " + str(originalByteArray))
+        print("  Encrypted: " + str(encryptedBytes)) 
+        print("  Decrypted: " + str(decryptedBytes))
         
-        print("Decoded Message: " + decodedMessage)
+        print("\nDecoded Message: " + decodedMessage + "\n")
            
 def main(): 
 
-    p = sympy.randprime(2, 100)
-    q = sympy.randprime(2, 100)
-    
     TestCase.testKeysRSA()
-    TestCase.testTextProcessing(u"Hello RSA! Привет РСА!", p , q)
+
+    p = 1
+    q = 1
+    
+    while p == q or p == 1 or q == 1:
+
+        p = sympy.randprime(2, 100)
+        q = sympy.randprime(2, 1000)
+    
+    keychain = KeyGenerator.generateKeysRSA(p, q)
+    
+    TestCase.testTextProcessing(u"Hello RSA! Привет РСА!", keychain)
+
+    print("\n--- Demo Hack Generate Key Pair Only From Public Key ---\n")
+    
+    CrackerRSA.generateKeysFromKey(keychain.publicKey)
     
 main()
